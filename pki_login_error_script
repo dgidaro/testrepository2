@@ -1,0 +1,26 @@
+//Make sure you're logged in as pd2_sso and change the username on line 7 to the correct username
+
+set proc_output_params off
+go
+
+declare @current_login_name varchar(30)
+select @current_login_name='fakeusername'
+
+declare @random_pwd varchar(30)
+if exists (select 1 from master..syslogins a, spssystemdb..sps_pki_map b where a.name=@current_login_name and a.name=b.login_name and b.registered=1)
+begin
+      print 'reset passroed for %1', @current_login_name
+      exec spssytemdb.dbo.generate_random_pwd_sp @random_pwd output
+      exec sp_password 'Bal@nce98765432!',@random_pwd,@current_login_name
+      
+      --if account is locked due to failed login attempts, unlock it
+      if exists (select 1 from master..syslogins where name=@current_login_name and lockreason=2_
+      begin
+         print 'unlocking %1', @current_login_name
+         exec sp_locklogin @current_login_name, 'unlock'
+      end
+
+end
+else
+begin
+    print 'The speficifed login %1! either does not exist or is not PKI-enabled',@current_login_name
